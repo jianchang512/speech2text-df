@@ -4,11 +4,11 @@
 
 ![](./static/ui.png)
 
-## 源码部署
+### 源码部署
 
 > 确保已配置 python 3.10+ 环境，其他版本未测试
 
-### 安装依赖
+1. 安装依赖
 
 ```
 git clone https://github.com/jianchang512/speech2text-df
@@ -17,23 +17,23 @@ pip install -r requirements.txt
 
 ```
 
-### 启动
+2. 启动
 
 `python api.py`
 
-### 添加 GPU 支持
+3. 添加 GPU 支持
 
 `pip install --force-reinstall torch  torchaudio --index-url https://download.pytorch.org/whl/cu126`
 
 
-## win预打包版本使用
+### win预打包版本使用
 
 1. 下载7z压缩包，解压
 2. 双击`点此启动.bat`，等待自动打开浏览器
 3. 若需 CUDA 加速，双击`安装GPU支持.bat`
 
 
-## API 接口
+### API 接口
 
 兼容 OpenAI /v1/audio/transcriptions 接口格式
 
@@ -128,7 +128,7 @@ pip install -r requirements.txt
 | ky-KG              | 吉尔吉斯语            |
 | az-AZ              | 阿塞拜疆语            |
 
-## 常见问题
+### 常见问题
 
 - `pip install` 时出错，请安装 `visual studio community 2022` 版本，工作负荷中选择 `使用c++的桌面开发`，右侧下拉底部，额外再选中`MSVC v140 v141 v142` 3项，安装成功后再重试
 - 提示`File is not zip`等错误，删掉`models`文件夹内的`nltk`后，挂系统代理重试
