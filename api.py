@@ -121,7 +121,7 @@ def recogn(file,language=None,model_name="base",device="cpu"):
     model = dolphin.load_model(model_name, ROOT_DIR+"/models", device)
     langlist=language.split('-') if language else [None,None]
     print(f'{langlist=}')
-    result = model(waveform, lang_sym=langlist[0], region_sym=langlist[1].upper() if len(langlist)>1 else None,padding_speech=False)
+    result = model(waveform, lang_sym=langlist[0], region_sym=langlist[1].upper() if len(langlist)>1 and langlist[1] else None,padding_speech=False)
     return result.text
     
     
