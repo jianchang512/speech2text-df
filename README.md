@@ -133,3 +133,4 @@ pip install -r requirements.txt
 - `pip install` 时出错，请安装 `visual studio community 2022` 版本，工作负荷中选择 `使用c++的桌面开发`，右侧下拉底部，额外再选中`MSVC v140 v141 v142` 3项，安装成功后再重试
 - 提示`File is not zip`等错误，删掉`models`文件夹内的`nltk`后，挂系统代理重试
 - 缺少`ffmpeg`,win下将ffmpeg.exe放在api.py目录下。Macos系统`brew install ffmpeg`安装
+- MacOS下如何使用 `MPS`：api.py 大约 233 行，将`device="cuda" if torch.cuda.is_available() else "cpu"`改为 `device="mps"`
