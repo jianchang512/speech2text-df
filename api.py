@@ -114,14 +114,14 @@ def cut_audio(audio_file):
     
     return data
     
-def recogn(file,language=None,model_name="base"):
+def recogn(file,language=None,model_name="base",device="cpu"):
     import dolphin
 
     waveform = dolphin.load_audio(file)
-    model = dolphin.load_model(model_name, ROOT_DIR+"/models", "cuda" if torch.cuda.is_available() else "cpu")
+    model = dolphin.load_model(model_name, ROOT_DIR+"/models", device)
     langlist=language.split('-') if language else [None,None]
     print(f'{langlist=}')
-    result = model(waveform, lang_sym=langlist[0], region_sym=langlist[1],padding_speech=False)
+    result = model(waveform, lang_sym=langlist[0], region_sym=langlist[1].upper() if len(langlist)>1 else None,padding_speech=False)
     return result.text
     
     
@@ -211,7 +211,16 @@ def audio_transcriptions():
         success, ffmpeg_error = run_ffmpeg(original_filepath, wav_filepath)
         if not success:
             return jsonify({"error": f"Audio conversion failed. {ffmpeg_error}"}), 500
-
+        
+        # 下载模型
+        if not Path(f'{ROOT_DIR}/models/{model}.pt').exists():
+            from dolphin.transcribe import MODELS,_download_from_modelscope
+            print(f'模型 {model}.pt 不存在，需要下载')
+            _download_from_modelscope(
+                model_id=MODELS[model]["model_id"],
+                local_dir=Path(f'{ROOT_DIR}/models'),
+                allow_file_pattern=f"{model}.pt",
+            )
 
         print(f'{wav_filepath=}')
         segments = cut_audio(wav_filepath)
@@ -221,6 +230,7 @@ def audio_transcriptions():
 
 
         processed_segments = []
+        device="cuda" if torch.cuda.is_available() else "cpu"
         for i, segment in enumerate(segments):
             segment_file = segment.get("file")
             if not segment_file or not os.path.exists(segment_file):
@@ -229,7 +239,7 @@ def audio_transcriptions():
 
             try:
                 print(f'{language=},{segment_file=}')
-                recognized_text = recogn(segment_file, language,model)
+                recognized_text = recogn(segment_file, language,model,device)
                 print(f'{recognized_text=}')
                 segment["text"] = recognized_text.strip() # 去除首尾空格
                 processed_segments.append(segment)
