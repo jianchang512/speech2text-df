@@ -1,0 +1,28 @@
+# Customed
+.vscode/
+logs/
+models/
+tmp/
+runtime/
+*.7z
+*.mp3
+*.wav
+*.exe
+*.bat
+
+__pycache__/
+build/
+dist/
+downloads/
+*.egg-info/
+.installed.cfg
+*.egg
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+.cache
+.pytest_cache/

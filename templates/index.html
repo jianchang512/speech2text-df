@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>东方语言音视频转写为字幕 speech2text-df</title>
+    <!-- Bootstrap CSS -->
+    <link href="/static/bootstrap.min.css" rel="stylesheet"  crossorigin="anonymous">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 800px; /* Limit content width */
+        }
+        #drop-area {
+            border: 2px dashed #0d6efd; /* Bootstrap primary color */
+            border-radius: .375rem; /* Bootstrap default border radius */
+            padding: 3rem;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+			position:relative;
+        }
+        #drop-area.drag-over {
+            background-color: #e9ecef; /* Light gray background on drag over */
+            border-color: #0a58ca; /* Darker blue */
+        }
+        #drop-area p {
+            margin-bottom: 0;
+            color: #6c757d; /* Bootstrap secondary text color */
+        }
+        #file-info {
+            background-color: #e9ecef;
+            padding: 0.5rem 1rem;
+            border-radius: .25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+			position:absolute;left:0;right:0;
+			top:0;
+			bottom:0;
+        }
+        #file-info span {
+             overflow: hidden;
+             text-overflow: ellipsis;
+             white-space: nowrap;
+             margin-right: 1rem; /* Space before button */
+        }
+        .result-block {
+            background-color: #fff;
+            border: 1px solid #dee2e6; /* Bootstrap default border color */
+            border-radius: .375rem;
+        }
+         .result-block textarea {
+            min-height: 150px;
+         }
+    </style>
+</head>
+<body>
+    <div class="container mt-4 mb-5">
+        <h1 class="text-center mb-4 fw-bold">东方语言音视频转文字</h1>
+		<p class="text-black-50 text-center">基于DataoceanAI/Dolphin模型</p>
+        <!-- File Upload Area -->
+        <div id="drop-area" class="mb-3">
+            <input type="file" id="fileInput" accept="audio/*,video/*" class="d-none"> <!-- Accept common audio/video -->
+            <p>将文件拖拽到此处，或 <span class="text-primary fw-semibold">点击上传</span></p>
+            <small class="text-muted">(支持: mp3, mp4, mpeg, mpga, m4a, wav, webm, aac, flac,mov,mkv,avi 等常见音视频格式)</small>
+			<div id="file-info" class="d-none"> <!-- Initially hidden -->
+				<span id="file-name" class="text-success"></span>
+				<button id="remove-file-btn" type="button" class="btn btn-sm btn-outline-danger">
+					<i class="bi bi-trash"></i> 删除
+				</button>
+			</div>
+        </div>
+
+        <!-- Language Selection -->
+        <div class="mb-3 d-flex align-items-center">
+            <label for="languageSelect" class="form-label mb-0 fw-semibold">选择语言:</label>
+            <select class="form-select w-auto" id="languageSelect">
+                <option value="" selected>自动检测</option>
+                <option value="zh-CN">中文(普通话)</option>
+                <option value="zh-TW">中文(台湾)</option>
+                <option value="zh-WU">中文(吴语)</option>
+                <option value="zh-SICHUAN">中文(四川话)</option>
+                <option value="zh-SHANXI">中文(山西话)</option>
+                <option value="zh-ANHUI">中文(安徽话)</option>
+                <option value="zh-TIANJIN">中文(天津话)</option>
+                <option value="zh-NINGXIA">中文(宁夏话)</option>
+                <option value="zh-SHAANXI">中文(陕西话)</option>
+                <option value="zh-HEBEI">中文(河北话)</option>
+                <option value="zh-SHANDONG">中文(山东话)</option>
+                <option value="zh-GUANGDONG">中文(广东话)</option>
+                <option value="zh-SHANGHAI">中文(上海话)</option>
+                <option value="zh-HUBEI">中文(湖北话)</option>
+                <option value="zh-LIAONING">中文(辽宁话)</option>
+                <option value="zh-GANSU">中文(甘肃话)</option>
+                <option value="zh-FUJIAN">中文(福建话)</option>
+                <option value="zh-HUNAN">中文(湖南话)</option>
+                <option value="zh-HENAN">中文(河南话)</option>
+                <option value="zh-YUNNAN">中文(云南话)</option>
+                <option value="zh-MINNAN">中文(闽南语)</option>
+                <option value="zh-WENZHOU">中文(温州话)</option>
+                <option value="ja-JP">日语</option>
+                <option value="th-TH">泰语</option>
+                <option value="ru-RU">俄语</option>
+                <option value="ko-KR">韩语</option>
+                <option value="id-ID">印度尼西亚语</option>
+                <option value="vi-VN">越南语</option>
+                <option value="ct-NULL">粤语(未知)</option>
+                <option value="ct-HK">粤语(香港)</option>
+                <option value="ct-GZ">粤语(广东)</option>
+                <option value="hi-IN">印地语</option>
+                <option value="ur-IN">乌尔都语(印度)</option>
+                <option value="ur-PK">乌尔都语</option>
+                <option value="ms-MY">马来语</option>
+                <option value="uz-UZ">乌兹别克语</option>
+                <option value="ar-MA">阿拉伯语(摩洛哥)</option>
+                <option value="ar-GLA">阿拉伯语</option>
+                <option value="ar-SA">阿拉伯语(沙特)</option>
+                <option value="ar-EG">阿拉伯语(埃及)</option>
+                <option value="ar-KW">阿拉伯语(科威特)</option>
+                <option value="ar-LY">阿拉伯语(利比亚)</option>
+                <option value="ar-JO">阿拉伯语(约旦)</option>
+                <option value="ar-AE">阿拉伯语(阿联酋)</option>
+                <option value="ar-LVT">阿拉伯语(黎凡特)</option>
+                <option value="fa-IR">波斯语</option>
+                <option value="bn-BD">孟加拉语</option>
+                <option value="ta-SG">泰米尔语(新加坡)</option>
+                <option value="ta-LK">泰米尔语(斯里兰卡)</option>
+                <option value="ta-IN">泰米尔语(印度)</option>
+                <option value="ta-MY">泰米尔语(马来西亚)</option>
+                <option value="te-IN">泰卢固语</option>
+                <option value="ug-CN">维吾尔语(新疆)</option>
+                <option value="ug-NULL">维吾尔语(未知)</option>
+                <option value="gu-IN">古吉拉特语</option>
+                <option value="my-MM">缅甸语</option>
+                <option value="tl-PH">塔加洛语</option>
+                <option value="kk-KZ">哈萨克语</option>
+                <option value="or-IN">奥里亚语</option>
+                <option value="ne-NP">尼泊尔语</option>
+                <option value="mn-MN">蒙古语</option>
+                <option value="km-KH">高棉语</option>
+                <option value="jv-ID">爪哇语</option>
+                <option value="lo-LA">老挝语</option>
+                <option value="si-LK">僧伽罗语</option>
+                <option value="fil-PH">菲律宾语</option>
+                <option value="ps-AF">普什图语</option>
+                <option value="pa-IN">旁遮普语</option>
+                <option value="kab-NULL">卡拜尔语</option>
+                <option value="ba-NULL">巴什基尔语</option>
+                <option value="ks-IN">克什米尔语</option>
+                <option value="tg-TJ">塔吉克语</option>
+                <option value="su-ID">巽他语</option>
+                <option value="mr-IN">马拉地语</option>
+                <option value="ky-KG">吉尔吉斯语</option>
+                <option value="az-AZ">阿塞拜疆语</option>
+            </select>
+			<label for="response_format" class="ms-2 mb-0 form-label fw-semibold">返回格式:</label>
+			<select class="form-select w-auto" id="response_format" >
+				<option value="srt">SRT</option>
+				<option value="txt">TXT</option>
+				<option value="json">JSON</option>
+			</select>
+			<label for="model_name" class="ms-2 mb-0 form-label fw-semibold">模型:</label>
+			<select class="form-select w-auto" id="model_name" >
+				<option value="base">base</option>
+				<option value="small">small</option>
+			</select>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="d-grid gap-2 mb-4"> <!-- Use grid for full-width button -->
+            <button id="submitBtn" type="button" class="btn btn-primary btn-lg">
+                <i class="bi bi-soundwave"></i> 开始转写
+            </button>
+        </div>
+
+        <!-- Results Area -->
+        <div id="resultsArea">
+            <!-- Transcription results will be prepended here -->
+        </div>
+
+    </div>
+	<div class="text-center text-black-50 mb-5">
+		<a href="https://github.com/jianchang512/speech2text-df" target="_blank">该项目源码</a>
+		<span class="mx-2">|</span>
+		<a href="https://github.com/DataoceanAI/Dolphin" target="_blank">Dolphin项目</a>
+	</div>
+
+    <!-- Bootstrap JS Bundle (includes Popper) -->
+    <script src="/static/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+
+    <script>
+        const dropArea = document.getElementById('drop-area');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfoDiv = document.getElementById('file-info');
+        const fileNameSpan = document.getElementById('file-name');
+        const removeFileBtn = document.getElementById('remove-file-btn');
+        const languageSelect = document.getElementById('languageSelect');
+        const submitBtn = document.getElementById('submitBtn');
+        const resultsArea = document.getElementById('resultsArea');
+        const ResponseFormat = document.getElementById('response_format');
+        const ModelName = document.getElementById('model_name');
+
+        let selectedFile = null; // Variable to store the selected file object
+
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false); // Prevent browser opening file
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // Highlight drop area when item is dragged over it
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            dropArea.classList.add('drag-over');
+        }
+
+        function unhighlight(e) {
+            dropArea.classList.remove('drag-over');
+        }
+
+        // Handle dropped files
+        dropArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+
+            if (files.length > 0) {
+                handleFileSelect(files[0]);
+            }
+        }
+
+        // Handle click to upload
+        dropArea.addEventListener('click', () => {
+            if (!selectedFile) { // Only trigger if no file is selected
+                fileInput.click();
+            }
+        });
+
+        // Handle file selection via input
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        // Handle file selection (unified function)
+        function handleFileSelect(file) {
+            if (!file) return;
+
+            // Basic validation (optional, backend handles more robustly)
+            // const allowedTypes = ['audio/', 'video/']; // Broad types
+            // if (!allowedTypes.some(type => file.type.startsWith(type))) {
+            //     alert('文件类型不支持！请上传音频或视频文件。');
+            //     resetFileInput();
+            //     return;
+            // }
+
+            selectedFile = file;
+            fileNameSpan.textContent = `${selectedFile.name} (${formatBytes(selectedFile.size)})`;
+            fileInfoDiv.classList.remove('d-none'); // Show file info
+            // Hide the default drop area text/prompt maybe? Optional.
+            // dropArea.querySelector('p').classList.add('d-none');
+            // dropArea.querySelector('small').classList.add('d-none');
+        }
+
+        // Handle file removal
+        removeFileBtn.addEventListener('click', (e) => {
+			e.stopPropagation();
+            resetFileInput();
+        });
+
+        function resetFileInput() {
+             selectedFile = null;
+             fileInput.value = ''; // Important to allow re-selecting the same file
+             fileInfoDiv.classList.add('d-none'); // Hide file info
+             fileNameSpan.textContent = '';
+             // Show the default drop area text/prompt again if it was hidden
+             // dropArea.querySelector('p').classList.remove('d-none');
+             // dropArea.querySelector('small').classList.remove('d-none');
+        }
+
+        // Format file size
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        // Handle submit button click
+        submitBtn.addEventListener('click', async () => {
+            if (!selectedFile) {
+                alert('请先选择或拖拽一个文件！');
+                return;
+            }
+
+            // Disable button and show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                处理中...
+            `;
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            const language = languageSelect.value;
+            if (language) { // Only append 'model' if a language is selected
+                formData.append('language', language);
+            }
+            formData.append('response_format', ResponseFormat.value);
+            formData.append('model', ModelName.value);
+
+            try {
+                const response = await fetch('/v1/audio/transcriptions', {
+                    method: 'POST',
+                    body: formData,
+                    // No 'Content-Type' header needed for FormData; browser sets it with boundary
+                });
+
+                if (!response.ok) {
+                    // Try to parse error as JSON, fallback to text
+                    let errorData;
+                    let errorMessage = `HTTP错误 ${response.status}: ${response.statusText}`;
+                    try {
+                        errorData = await response.json();
+                        errorMessage = errorData.error || JSON.stringify(errorData); // Use specific error field if present
+                    } catch (e) {
+                        // If not JSON, try text
+                        try {
+                            errorMessage = await response.text();
+                        } catch (textErr) {
+                            // Keep the original HTTP status message
+                        }
+                    }
+                     // Limit alert length
+                    if (errorMessage.length > 300) {
+                         errorMessage = errorMessage.substring(0, 300) + "...";
+                    }
+                    throw new Error(`API 请求失败: ${errorMessage}`);
+                }
+
+                const srtResult = await response.text(); // Get SRT as plain text
+                displayResult(srtResult, selectedFile.name);
+                // Don't reset file input here, user might want to re-transcribe with different lang
+                // resetFileInput(); // Optionally reset after successful transcription
+
+            } catch (error) {
+                console.error('转录过程中发生错误:', error);
+                alert(`转录失败: ${error.message}`);
+            } finally {
+                // Re-enable button and restore original text
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-soundwave"></i> 开始转写';
+            }
+        });
+
+        // Function to display the result
+        function displayResult(srtContent, originalFilename) {
+            const resultId = `result-${Date.now()}`; // Unique ID for the block
+            const srtFilename = originalFilename.substring(0, originalFilename.lastIndexOf('.')) + '.'+ResponseFormat.value;
+
+            const resultBlock = document.createElement('div');
+            resultBlock.id = resultId;
+            resultBlock.classList.add('result-block', 'p-3', 'mb-3');
+
+            const textarea = document.createElement('textarea');
+            textarea.classList.add('form-control', 'mb-2');
+            textarea.value = srtContent;
+            textarea.readOnly = true;
+            textarea.rows = 10; // Adjust as needed
+
+            const buttonGroup = document.createElement('div');
+            buttonGroup.classList.add('d-flex', 'justify-content-end', 'gap-2'); // Use gap for spacing
+
+            // Download Button
+            const downloadBtn = document.createElement('button');
+            downloadBtn.classList.add('btn', 'btn-success', 'btn-sm');
+            downloadBtn.innerHTML = '<i class="bi bi-download"></i> 下载 转写结果';
+            downloadBtn.onclick = () => {
+                downloadSrt(srtContent, srtFilename);
+            };
+
+            // Delete Button
+            const deleteBtn = document.createElement('button');
+            deleteBtn.classList.add('btn', 'btn-danger', 'btn-sm');
+            deleteBtn.innerHTML = '<i class="bi bi-trash"></i> 删除结果';
+            deleteBtn.onclick = () => {
+                 resultBlock.remove(); // Use the captured resultBlock reference
+            };
+
+            buttonGroup.appendChild(downloadBtn);
+            buttonGroup.appendChild(deleteBtn);
+
+            resultBlock.appendChild(textarea);
+            resultBlock.appendChild(buttonGroup);
+
+            // Prepend to the results area (newest first)
+            resultsArea.prepend(resultBlock);
+        }
+
+        // Function to trigger SRT download
+        function downloadSrt(text, filename) {
+            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a); // Required for Firefox
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url); // Clean up
+        }
+
+    </script>
+</body>
+</html>

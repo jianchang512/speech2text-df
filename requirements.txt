@@ -1,0 +1,7 @@
+faster-whisper
+pydub
+flask
+waitress
+torch
+torchaudio
+dataoceanai-dolphin
